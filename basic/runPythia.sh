@@ -6,11 +6,11 @@ if [ -z "$SLURM_ARRAY_TASK_ID" ]
   else
   I=$SLURM_ARRAY_TASK_ID
 fi
-n=$1
-c=$2
+nEvents=$1
+settings=$2
 mkdir $I
 cd $I
 echo "SLURM_JOB_NODELIST"=$SLURM_JOB_NODELIST  > ../log$I.out
-cp ../$c .
-../oniaVsMult $n $c out $I 
+cp ../$settings .
+../oniaVsMult $nEvents $settings out $I
 mv ../log$I.* .

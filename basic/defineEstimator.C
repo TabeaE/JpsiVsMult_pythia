@@ -5,108 +5,111 @@
  * 
  * 
  * 0: nch in full rapidity
- * 1: nch in |eta| < 1
- * 2: nch in V0A
- * 3: nch in V0C
- * 4: nch in V0M = V0A+V0C
- * 5 : number of MPI
+ * 1: nch in |eta| < 0.9
+ * 2: nch in |eta| < 1.0
+ * 3: nch in V0A
+ * 4: nch in V0C
+ * 5: nch in V0M = V0A+V0C
+ * 6: number of MPI
  * 
  * 10: nch in full rapidity in towards region
- * 11: nch in |eta| < 1 in towards region
- * 12: nch in V0A in towards region
- * 13: nch in V0C in towards region
- * 14: nch in V0M in towards region
+ * 11: nch in |eta| < 0.9 in towards region
+ * 12: nch in |eta| < 1.0 in towards region
+ * 13: nch in V0A in towards region
+ * 14: nch in V0C in towards region
+ * 15: nch in V0M in towards region
  * 
  * 20: nch in full rapidity in transverse region
- * 21: nch in |eta| < 1 in transverse region
- * 22: nch in V0A in transverse region
- * 23: nch in V0C in transverse region
- * 24: nch in V0M in transverse region
+ * 21: nch in |eta| < 0.9 in transverse region
+ * 22: nch in |eta| < 1.0 in transverse region
+ * 23: nch in V0A in transverse region
+ * 24: nch in V0C in transverse region
+ * 25: nch in V0M in transverse region
  * 
  * 30: nch in full rapidity in away region
- * 31: nch in |eta| < 1 in away region
- * 32: nch in V0A in away region
- * 33: nch in V0C in away region
- * 34: nch in V0M in away region
+ * 31: nch in |eta| < 0.9 in away region
+ * 32: nch in |eta| < 1.0 in away region
+ * 33: nch in V0A in away region
+ * 34: nch in V0C in away region
+ * 35: nch in V0M in away region
  * 
  * 
  * 
  * The macro returns 3 strings:
- *  - estimatorString : to be given to the tree for drawing
- *  - stringForAxisTitle : used for the x axis title
- *  - regionString : also used in the x axis title, describes the phi region
+ *  - estimatorString:    to be given to the tree for drawing
+ *  - stringForAxisTitle: used for the x axis title
+ *  - regionString:       also used in the x axis title, describes the phi region
  * 
- * In addition it returns a factor by which to scale the x axis (because multiplicity in V0M is higher than in |eta| < 1 and so on)
+ * In addition it returns a factor by which to scale the x axis (because multiplicity in V0M is higher than in
+ * |eta| < 1 and so on).
  * 
  * 
  * 
  * 
  */
 
-void defineEstimator( int estimator, TString &estimatorString, TString &stringForAxisTitle, TString &regionString, double &factor){
-
+void defineEstimator(int estimator, TString &estimatorString, TString &stringForAxisTitle, TString &regionString, 
+                     double &factor) {
+  
   factor = 1.;
-  switch(estimator){
-    case 5:
+  switch(estimator) {
+    case 6:
       stringForAxisTitle = "#it{N}_{MPI}";
-      estimatorString = "nMPI";
+      estimatorString    = "nMPI";
       return;
       break;
     default:
       stringForAxisTitle = "#it{N}_{ch}";
-      estimatorString = "mult";
+      estimatorString    = "mult";
       break;
   }
 
-  
-  
   int last_digit = estimator %10;
-  
-  switch( last_digit ){
+  switch(last_digit ) {
     case 0:
       regionString = "full rapidity";
       factor *= 2.;
       break;
     case 1:
-      regionString = "|#it{#eta}|<1";
-      estimatorString += "Eta1";
+      regionString     = "|#it{#eta}|<0.9";
+      estimatorString += "Eta09";
       break;
     case 2:
-      regionString = "V0A";
-      estimatorString += "V0A";
+      regionString     = "|#it{#eta}|<1";
+      estimatorString += "Eta1";
       break;
     case 3:
-      regionString = "V0C";
-      estimatorString += "V0C";
+      regionString     = "V0A";
+      estimatorString += "V0A";
       break;
     case 4:
-      regionString = "V0M";
+      regionString     = "V0C";
+      estimatorString += "V0C";
+      break;
+    case 5:
+      regionString     = "V0M";
       estimatorString += "V0M";
       factor *= 1.5;
       break;
   }
   
-  
-  int second_digit = (estimator %100 - estimator%10) / 10;
-  
-  switch(second_digit){
+  int second_digit = (estimator%100 - estimator%10) / 10;
+  switch(second_digit) {
     case 1:
-      regionString += ", toward region";
+      regionString    += ", toward region";
       estimatorString += "Region1";
       factor /= 2.;
       break;
     case 2:
-      regionString += ", transverse region";
+      regionString    += ", transverse region";
       estimatorString += "Region2";
       factor /= 2.;
       break;
     case 3:
-      regionString += ", away region";
+      regionString    += ", away region";
       estimatorString += "Region3";
       factor /= 2.;
       break;
   }
-  
-  
   
 }

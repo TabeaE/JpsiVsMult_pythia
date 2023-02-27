@@ -1,6 +1,6 @@
 Files to run pythia simulations and plot multiplicity dependence of J/psi (or other quarkonium, open heavy flavor or other hard probe) producion.
 The folder full contains the full scripts as used for the publication and for the MC closure checks in the analysis.
-The folder basic contains simpler versions of the scripts which should be easier to understand do not have the full functionality.
+The folder basic contains simpler versions of the scripts which should be easier to understand but do not have the full functionality.
 
 0. step is to install root and pythia8, telling pythia where to find root while installing. Download pythia from http://home.thep.lu.se/Pythia/ and follow the instructions from the README file, i.e. install with
 
