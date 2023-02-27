@@ -11,7 +11,7 @@ nEvents=$3
 settings=$4
 mkdir trees/$outDir
 cd trees/$outDir
-cp ../../oniaVsMult .
+cp ../../oniaVsMult.cc .
 cp ../../runPythia.sh .
 cp ../../$settings .
-sbatch --time=8:00:00 --mem-per-cpu=3072 --array=1-$nJobs -o log%a.out -e log%a.err runPythia.sh $nEvents $settings
+sbatch --time=8:00:00 --mem-per-cpu=3072 --array=1-$nJobs -p long -o log%a.out -e log%a.err runPythia.sh $nEvents $settings
