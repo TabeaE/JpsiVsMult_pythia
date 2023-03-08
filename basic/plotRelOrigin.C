@@ -123,11 +123,17 @@ bool noCR;
 
 // Multiplicity bins are first multiplied by the factor and then shifted by -0.5
 // pPb 5TeV, global tracks
-const unsigned int nMultiplicityBins = 10;
+const unsigned int nMultiplicityBins = 15;
 double multiplicityBins[nMultiplicityBins] = {
          1., 20., 27., 34.,  44.,
-        54., 64., 79., 94., 119.
+        54., 64., 79., 94., 119.,
+        130., 140., 150., 160., 170.
       };
+// const unsigned int nMultiplicityBins = 10;
+// double multiplicityBins[nMultiplicityBins] = {
+//          1., 20., 27., 34.,  44.,
+//         54., 64., 79., 94., 119.
+//       };
 
 // pp 13TeV, SPD tracklets
 // const unsigned int nMultiplicityBins = 24;
@@ -145,7 +151,7 @@ double errPerBin[nMultiplicityBins];
 
 
 void plotRelOrigin(int plotWhat, int selector, int estimator, TString setSettings, int setEventClass,
-                   bool setEventTrigger, int signalRapidity, double maxY, TString folder) {
+                   int setEventTrigger, int signalRapidity, double maxY, TString folder) {
 
   gEnv->SetValue("Hist.Precision.1D", "double");
 
@@ -179,8 +185,8 @@ void plotRelOrigin(int plotWhat, int selector, int estimator, TString setSetting
   cout << "estimator: " << estimatorString << endl;
   cout << "selector: "  << selectorString  << endl;
   
-  if(noCR)  factor *= 3.;
-  if(noMPI) factor /= 2.;
+  if(noCR)  {cout << "no CR" << endl; factor *= 3.;}
+  if(noMPI) {cout << "no MPI" << endl; factor /= 2.;}
   
   if(estimator!=6) estimatorStringForAxisTitle = Form("d%s/d#it{#eta}", estimatorStringForAxisTitle.Data());
   estimatorStringForAxisTitle = normalized(estimatorStringForAxisTitle); 
@@ -214,24 +220,24 @@ void plotRelOrigin(int plotWhat, int selector, int estimator, TString setSetting
   TString eventCut;
   switch(eventClass) {
     case 0:  // Not-diffractive inelastic events
-      eventCut =  (eventTrigger==0) ? "inelastic && !diffractive"
-                : (eventTrigger==1) ? "inelastic && !diffractive && V0AND"
-                : (eventTrigger==2) ? "inelastic && !diffractive && inel0";
+      eventCut = (eventTrigger==2) ? "inelastic && !diffractive && inel0"
+               : (eventTrigger==1) ? "inelastic && !diffractive && V0AND"
+               :                     "inelastic && !diffractive";  // (eventTrigger==0, default)
       break;
     case 1:  // All inelastic events
-      eventCut =  (eventTrigger==0) ? "inelastic"
-                : (eventTrigger==1) ? "inelastic && V0AND"
-                : (eventTrigger==2) ? "inelastic && inel0";
+      eventCut = (eventTrigger==2) ? "inelastic && inel0"
+               : (eventTrigger==1) ? "inelastic && V0AND"
+               :                     "inelastic";  // (eventTrigger==0: all events, default)
       break;
     case 2:  // Diffractive events
-      eventCut =  (eventTrigger==0) ? "diffractive"
-                : (eventTrigger==1) ? "V0AND && diffractive"
-                : (eventTrigger==2) ? "inel0 && diffractive";
+      eventCut = (eventTrigger==2) ? "diffractive && inel0"
+               : (eventTrigger==1) ? "diffractive && V0AND"
+               :                     "diffractive";  // (eventTrigger==0: all events, default)
       break;
     case 3:  // Not single-diffractive events
-      eventCut =  (eventTrigger==0) ? "NSD"
-                : (eventTrigger==1) ? "V0AND && NSD"
-                : (eventTrigger==2) ? "inel0 && NSD";
+      eventCut = (eventTrigger==2) ? "NSD && inel0"
+               : (eventTrigger==1) ? "NSD && V0AND"
+               :                     "NSD";  // (eventTrigger==0: all events, default)
       break;
   }
   
@@ -245,10 +251,15 @@ void plotRelOrigin(int plotWhat, int selector, int estimator, TString setSetting
   TH2D* hMult = new TH2D("hMult", "hMult", 1000, -0.5, 999.5, 1000, -0.5, 999.5);
   hMult->Sumw2();
   hMult->SetDirectory(gDirectory);
-  eventTree->Draw("mul:sel>>hMult", "eventCut", "goff");
+  eventTree->Draw("mul:sel>>hMult", "eventCut", "goff");  // sel: x-axis, mul: y-axis
+  TCanvas* c1 = new TCanvas();
+  c1->cd();
+  hMult->GetXaxis()->SetTitle(selectorString.Data());
+  hMult->GetYaxis()->SetTitle(estimatorString.Data());
+  hMult->Draw("colz");
   hMult->GetXaxis()->SetRange(0, hMult->GetNbinsX());
 
-  meanMultMB = hMult->GetMean(2); 
+  meanMultMB = hMult->GetMean(2);  // Get mean along y-axis (mean of mul)
   nEventsMB  = hMult->Integral();
   cout << "nEventsMB " << nEventsMB << endl << "mean mult: " << meanMultMB << endl;
   if(!nEventsMB)  crash("nEventsMB == 0!!!");
@@ -256,8 +267,9 @@ void plotRelOrigin(int plotWhat, int selector, int estimator, TString setSetting
 
   for(unsigned int i=0; i<nMultiplicityBins-1; ++i) {
       hMult->GetXaxis()->SetRangeUser(multiplicityBins[i], multiplicityBins[i+1]);
-      meanMultMBPerBin[i] = hMult->GetMean(2);
-      int binMin = hMult->GetXaxis()->FindBin(multiplicityBins[i] );
+      meanMultMBPerBin[i] = hMult->GetMean(2);  // Get mean along y-axis (mean of mul) in ith bin of sel
+      cout << "mean mult in " << selectorString.Data() << " = " << multiplicityBins[i] << " - " << multiplicityBins[i+1] << ": " << meanMultMBPerBin[i] << endl;
+      int binMin = hMult->GetXaxis()->FindBin(multiplicityBins[i]);
       int binMax = hMult->GetXaxis()->FindBin(multiplicityBins[i+1])-1;
       nEventsPerBin[i] = hMult->IntegralAndError(binMin, binMax, 0, 1000, errPerBin[i]);
   }
@@ -416,8 +428,8 @@ void plot(TString commonCut, TString commonName, TString header, TString inclusi
     Color_t color   = cutBin ? variations[iCut].color : 1;
     int style       = cutBin ? variations[iCut].style : 20;
     int lineStyle   = 1;
-    TString optionY = "PLsame";
-    TString optionF = "PLsame";
+    TString optionY = "Psame";
+    TString optionF = "Psame";
     
     cout << "  " << name << endl;
 
@@ -504,7 +516,7 @@ void plot(TString commonCut, TString commonName, TString header, TString inclusi
       stylePlot(gFractionVsMult, color, style, lineStyle, title, estimatorStringForAxisTitle,
                 "Fraction of total yield", 0., maxX, 0., 1.);
       drawInCanvas(cFractionVsMult, gFractionVsMult, optionF);
-      lmf->AddEntry(gFractionVsMult, name.Data(), "LP");
+      lmf->AddEntry(gFractionVsMult, name.Data(), "P");
     }
     
     stylePlot(gYieldVsMult, color, style, lineStyle, title, estimatorStringForAxisTitle,
@@ -514,7 +526,7 @@ void plot(TString commonCut, TString commonName, TString header, TString inclusi
     stylePlot(gRatioToLin, color, style, lineStyle, title, estimatorStringForAxisTitle,
               "ratio to lin", 0., maxX, 0., 2.);
     drawInCanvas(cRatioToLin, gRatioToLin, optionY);
-    lmy->AddEntry(gYieldVsMult, name.Data(), "LP");
+    lmy->AddEntry(gYieldVsMult, name.Data(), "P");
     
     
     // Transverse momentum
@@ -549,13 +561,13 @@ void plot(TString commonCut, TString commonName, TString header, TString inclusi
     
     stylePlot(gYieldVsPt, color, style, lineStyle, title, "#it{p}_{T} (GeV/c)", "yield (a.u.)", 0.,maxPt);
     drawInCanvas(cYieldVsPt, gYieldVsPt, optionY);
-    lpy->AddEntry(gYieldVsPt, name.Data(), "LP");
+    lpy->AddEntry(gYieldVsPt, name.Data(), "P");
     
     if(cutBin) {
       stylePlot(gFractionVsPt, color, style, lineStyle, title, "#it{p}_{T} (GeV/c)",
                 "Fraction of total yield", 0., maxPt, 0., 1.);
       drawInCanvas(cFractionVsPt, gFractionVsPt, optionF);
-      lpf->AddEntry(gFractionVsPt, name.Data(), "LP");
+      lpf->AddEntry(gFractionVsPt, name.Data(), "P");
     }
     
     
@@ -589,12 +601,12 @@ void plot(TString commonCut, TString commonName, TString header, TString inclusi
     
     stylePlot(gYieldVsY, color, style, lineStyle, title, "y", "yield (a.u.)", -6., 6.);
     drawInCanvas(cYieldVsY, gYieldVsY, optionY);
-    lyy->AddEntry(gYieldVsY, name.Data(), "LP");
+    lyy->AddEntry(gYieldVsY, name.Data(), "P");
     
     if(cutBin) {
       stylePlot(gFractionVsY, color, style, lineStyle, title, "y", "Fraction of total yield", -6., 6., 0.,1.);
       drawInCanvas(cFractionVsY, gFractionVsY, optionF);
-      lyf->AddEntry(gFractionVsY, name.Data(), "LP");
+      lyf->AddEntry(gFractionVsY, name.Data(), "P");
     }
     
     gFractionVsMult->Write(Form("fractonVsMult_%d", iCut));
@@ -712,7 +724,7 @@ void styleFunction(TF1* g, Color_t color, int lineStyle, TString title, TString 
   g->SetLineStyle(lineStyle);
   g->SetLineWidth(2);
 
-  g->SetTitle(Form("PYTHIA 8.3, p--Pb #sqrt{#it{s}} = 5 TeV, %s", title.Data()));
+  g->SetTitle(Form("PYTHIA 8.3, p-Pb #sqrt{#it{s}} = 5 TeV, %s", title.Data()));
   g->GetXaxis()->SetTitle(xtitle.Data());
   g->GetYaxis()->SetTitle(ytitle.Data());
   g->GetXaxis()->SetTitleOffset(1.5);
@@ -738,7 +750,7 @@ void stylePlot(TGraphErrors* g, Color_t color, int style, int lineStyle, TString
   g->SetLineWidth(2);
 
 //   g->SetTitle(title.Data());
-  g->SetTitle(Form("PYTHIA 8.3, p--Pb #sqrt{#it{s}} = 5 TeV, %s", title.Data()));
+  g->SetTitle(Form("PYTHIA 8.3, p-Pb #sqrt{#it{s}} = 5 TeV, %s", title.Data()));
   g->GetXaxis()->SetTitle(xtitle.Data());
   g->GetYaxis()->SetTitle(ytitle.Data());
   g->GetXaxis()->SetTitleOffset(1.5);

@@ -165,6 +165,11 @@ int main(int argc, char** argv) {
     unsigned short multEta1RegionRnd;
     unsigned short multV0ARegionRnd;
     unsigned short multV0CRegionRnd;
+    unsigned short weight;
+    unsigned short nCollTot;
+    unsigned short nPartTarg;
+    unsigned short nAbsTarg;
+    unsigned short nDiffTarg;
 
     TTree* eventTree = new TTree("eventTree", "event information");
 
@@ -182,6 +187,12 @@ int main(int argc, char** argv) {
     eventTree->Branch("multEta1RegionRnd",  &multEta1RegionRnd);
     eventTree->Branch("multV0ARegionRnd",   &multV0ARegionRnd);
     eventTree->Branch("multV0CRegionRnd",   &multV0CRegionRnd);
+    eventTree->Branch("weight",             &weight);     // weight of the current event.
+    eventTree->Branch("nCollTot",           &nCollTot);   // nof separate sub-collisions
+    eventTree->Branch("nPartTarg",          &nPartTarg);  // nof interacting target nucleons
+    eventTree->Branch("nAbsTarg",           &nAbsTarg);   // nof absorptively wounded target nucleons
+    eventTree->Branch("nDiffTarg",          &nDiffTarg);  // nof diffrectively wounded target nucleons
+
 
     TTree* oniumTree = new TTree("oniumTree", "Onia information");
     Quarkonium onium;
@@ -251,6 +262,12 @@ int main(int argc, char** argv) {
         type = pythia.info.code();
         // number of hard interactions (0 is for elastic and diffractive events)
         nMPI = pythia.info.nMPI();
+
+        weight    = pythia.info.hiinfo.weight();
+        nCollTot  = pythia.info.hiinfo.nCollTot();
+        nPartTarg = pythia.info.hiinfo.nPartTarg();
+        nAbsTarg  = pythia.info.hiinfo.nAbsTarg();
+        nDiffTarg = pythia.info.hiinfo.nDiffTarg();
 
         vector <Quarkonium> foundQuarkoniumPerEvent;
         // here the loop over the particles starts
