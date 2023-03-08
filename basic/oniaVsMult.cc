@@ -56,12 +56,12 @@ using namespace Pythia8;
  * This is the information stored for each Quarkonium in the tree:
  *  - the pdg code (see http://pdg.lbl.gov/2019/reviews/rpp2019-rev-monte-carlo-numbering.pdf)
  *  - the pT and rapidity
- *  - the multiplicities in the towards ("Region1"), transverse ("Region2") and away ("Region3") region
+ *  - the multiplicities in the towards ("Regions[0]"), transverse ("Regions[1]") and away ("Regions[2]") region
  *    these multiplicities are counted either
  *    - for all etas
  *    - for |eta| < 1
- *    - in the V0A acceptance
- *    - in the V0C acceptance
+ *    - in the V0A acceptance at positive or negative rapidity
+ *    - in the V0C acceptance at positive or negative rapidity
  *
  */
 struct Quarkonium {
@@ -69,65 +69,51 @@ struct Quarkonium {
     float pt,y;
     int initialPdg;
     int decayChannel;
-    unsigned short multRegion1;
-    unsigned short multRegion2;
-    unsigned short multRegion3;
-    unsigned short multEta09Region1;
-    unsigned short multEta09Region2;
-    unsigned short multEta09Region3;
-    unsigned short multEta1Region1;
-    unsigned short multEta1Region2;
-    unsigned short multEta1Region3;
-    unsigned short multV0ARegion1;
-    unsigned short multV0ARegion2;
-    unsigned short multV0ARegion3;
-    unsigned short multV0CRegion1;
-    unsigned short multV0CRegion2;
-    unsigned short multV0CRegion3;
+    unsigned short multRegions[3];
+    unsigned short multEta09Regions[3];
+    unsigned short multEta1Regions[3];
+    unsigned short multV0APosRegions[3];
+    unsigned short multV0ANegRegions[3];
+    unsigned short multV0CPosRegions[3];
+    unsigned short multV0CNegRegions[3];
     Quarkonium():
         pdg(0),
         pt(0.),
         y(0.),
         initialPdg(0),
         decayChannel(0),
-        multRegion1(0),
-        multRegion2(0),
-        multRegion3(0),
-        multEta09Region1(0),
-        multEta09Region2(0),
-        multEta09Region3(0),
-        multEta1Region1(0),
-        multEta1Region2(0),
-        multEta1Region3(0),
-        multV0ARegion1(0),
-        multV0ARegion2(0),
-        multV0ARegion3(0),
-        multV0CRegion1(0),
-        multV0CRegion2(0),
-        multV0CRegion3(0)
+        multRegions{0,0,0},
+        multEta09Regions{0,0,0},
+        multEta1Regions{0,0,0},
+        multV0APosRegions{0,0,0},
+        multV0ANegRegions{0,0,0},
+        multV0CPosRegions{0,0,0},
+        multV0CNegRegions{0,0,0}
     {};
 };
 
 void traceBackQuarkonium(Quarkonium &found, unsigned short particle, Pythia &pythia);
 bool isOnium(int pdg);
 
-void fillRegions(unsigned short &multRegion1, unsigned short &multEta09Region1, unsigned short &multEta1Region1,
-                 unsigned short &multV0ARegion1, unsigned short &multV0CRegion1,
-                 unsigned short &multRegion2, unsigned short &multEta09Region2, unsigned short &multEta1Region2,
-                 unsigned short &multV0ARegion2, unsigned short &multV0CRegion2,
-                 unsigned short &multRegion3, unsigned short &multEta09Region3, unsigned short &multEta1Region3,
-                 unsigned short &multV0ARegion3, unsigned short &multV0CRegion3,
+void fillRegions(unsigned short (&multRegions)[3], unsigned short (&multEta09Regions)[3],
+                 unsigned short (&multEta1Regions)[3],
+                 unsigned short (&multV0APosRegions)[3], unsigned short (&multV0ANegRegions)[3],
+                 unsigned short (&multV0CPosRegions)[3], unsigned short (&multV0CNegRegions)[3],
                  double phi, double eta);
-void fillRegionRandom(unsigned short &multRegion, unsigned short &multEta09Region, unsigned short &multEta1Region,
-                      unsigned short &multV0ARegion, unsigned short &multV0CRegion,
+void fillRegionRandom(unsigned short &multRegion, unsigned short &multEta09Region,
+                      unsigned short &multEta1Region,
+                      unsigned short &multV0APosRegion, unsigned short &multV0ANegRegion,
+                      unsigned short &multV0CPosRegion, unsigned short &multV0CNegRegion,
                       double phi, double eta);
 void fillRegionsWrtQuarkonium(Quarkonium &found, Pythia& pythia, double phi);
 
 bool isPrimaryChargedALICE(unsigned short idx, Pythia &pythia);
 bool isLongLived(unsigned int pdg);
 
-bool inV0Aacceptance(float eta);
-bool inV0Cacceptance(float eta);
+bool inV0APosAcceptance(float eta);
+bool inV0ANegAcceptance(float eta);
+bool inV0CPosAcceptance(float eta);
+bool inV0CNegAcceptance(float eta);
 
 /**
  *
@@ -158,14 +144,16 @@ int main(int argc, char** argv) {
 
 
     // prepare trees
-    unsigned short mult, multEta09, multEta1, multV0A, multV0C, nMPI;
+    unsigned short multFull, multEta09, multEta1, multV0APos, multV0ANeg, multV0CPos, multV0CNeg, nMPI;
     unsigned char  type;
     unsigned short multRegionRnd;
     unsigned short multEta09RegionRnd;
     unsigned short multEta1RegionRnd;
-    unsigned short multV0ARegionRnd;
-    unsigned short multV0CRegionRnd;
-    unsigned short weight;
+    unsigned short multV0APosRegionRnd;
+    unsigned short multV0ANegRegionRnd;
+    unsigned short multV0CPosRegionRnd;
+    unsigned short multV0CNegRegionRnd;
+    double weight;
     unsigned short nCollTot;
     unsigned short nPartTarg;
     unsigned short nAbsTarg;
@@ -175,32 +163,38 @@ int main(int argc, char** argv) {
 
 
     // define the tree for minimum bias events
-    eventTree->Branch("mult",               &mult);
-    eventTree->Branch("multEta09",          &multEta09);
-    eventTree->Branch("multEta1",           &multEta1);
-    eventTree->Branch("multV0A",            &multV0A);
-    eventTree->Branch("multV0C",            &multV0C);
-    eventTree->Branch("type",               &type);
-    eventTree->Branch("nMPI",               &nMPI);
-    eventTree->Branch("multRegionRnd",      &multRegionRnd);
-    eventTree->Branch("multEta09RegionRnd", &multEta09RegionRnd);
-    eventTree->Branch("multEta1RegionRnd",  &multEta1RegionRnd);
-    eventTree->Branch("multV0ARegionRnd",   &multV0ARegionRnd);
-    eventTree->Branch("multV0CRegionRnd",   &multV0CRegionRnd);
-    eventTree->Branch("weight",             &weight);     // weight of the current event.
-    eventTree->Branch("nCollTot",           &nCollTot);   // nof separate sub-collisions
-    eventTree->Branch("nPartTarg",          &nPartTarg);  // nof interacting target nucleons
-    eventTree->Branch("nAbsTarg",           &nAbsTarg);   // nof absorptively wounded target nucleons
-    eventTree->Branch("nDiffTarg",          &nDiffTarg);  // nof diffrectively wounded target nucleons
+    eventTree->Branch("multFull",            &multFull);
+    eventTree->Branch("multEta09",           &multEta09);
+    eventTree->Branch("multEta1",            &multEta1);
+    eventTree->Branch("multV0APos",          &multV0APos);
+    eventTree->Branch("multV0ANeg",          &multV0ANeg);
+    eventTree->Branch("multV0CPos",          &multV0CPos);
+    eventTree->Branch("multV0CNeg",          &multV0CNeg);
+    eventTree->Branch("type",                &type);
+    eventTree->Branch("nMPI",                &nMPI);
+    eventTree->Branch("multRegionRnd",       &multRegionRnd);
+    eventTree->Branch("multEta09RegionRnd",  &multEta09RegionRnd);
+    eventTree->Branch("multEta1RegionRnd",   &multEta1RegionRnd);
+    eventTree->Branch("multV0APosRegionRnd", &multV0APosRegionRnd);
+    eventTree->Branch("multV0ANegRegionRnd", &multV0ANegRegionRnd);
+    eventTree->Branch("multV0CPosRegionRnd", &multV0CPosRegionRnd);
+    eventTree->Branch("multV0CNegRegionRnd", &multV0CNegRegionRnd);
+    eventTree->Branch("weight",              &weight);     // weight of the current event.
+    eventTree->Branch("nCollTot",            &nCollTot);   // nof separate sub-collisions
+    eventTree->Branch("nPartTarg",           &nPartTarg);  // nof interacting target nucleons
+    eventTree->Branch("nAbsTarg",            &nAbsTarg);   // nof absorptively wounded target nucleons
+    eventTree->Branch("nDiffTarg",           &nDiffTarg);  // nof diffrectively wounded target nucleons
 
 
     TTree* oniumTree = new TTree("oniumTree", "Onia information");
     Quarkonium onium;
-    oniumTree->Branch("mult",               &mult);
+    oniumTree->Branch("multFull",           &multFull);
     oniumTree->Branch("multEta09",          &multEta09);
     oniumTree->Branch("multEta1",           &multEta1);
-    oniumTree->Branch("multV0A",            &multV0A);
-    oniumTree->Branch("multV0C",            &multV0C);
+    oniumTree->Branch("multV0APos",         &multV0APos);
+    oniumTree->Branch("multV0ANeg",         &multV0ANeg);
+    oniumTree->Branch("multV0CPos",         &multV0CPos);
+    oniumTree->Branch("multV0CNeg",         &multV0CNeg);
     oniumTree->Branch("nMPI",               &nMPI);
     oniumTree->Branch("type",               &type);
     oniumTree->Branch("onium.pdg",          &onium.pdg);
@@ -208,21 +202,13 @@ int main(int argc, char** argv) {
     oniumTree->Branch("onium.pt",           &onium.pt);
     oniumTree->Branch("onium.y",            &onium.y);
     oniumTree->Branch("onium.initialPdg",   &onium.initialPdg);
-    oniumTree->Branch("multRegion1",        &onium.multRegion1);
-    oniumTree->Branch("multRegion2",        &onium.multRegion2);
-    oniumTree->Branch("multRegion3",        &onium.multRegion3);
-    oniumTree->Branch("multEta09Region1",   &onium.multEta09Region1);
-    oniumTree->Branch("multEta09Region2",   &onium.multEta09Region2);
-    oniumTree->Branch("multEta09Region3",   &onium.multEta09Region3);
-    oniumTree->Branch("multEta1Region1",    &onium.multEta1Region1);
-    oniumTree->Branch("multEta1Region2",    &onium.multEta1Region2);
-    oniumTree->Branch("multEta1Region3",    &onium.multEta1Region3);
-    oniumTree->Branch("multV0ARegion1",     &onium.multV0ARegion1);
-    oniumTree->Branch("multV0ARegion2",     &onium.multV0ARegion2);
-    oniumTree->Branch("multV0ARegion3",     &onium.multV0ARegion3);
-    oniumTree->Branch("multV0CRegion1",     &onium.multV0CRegion1);
-    oniumTree->Branch("multV0CRegion2",     &onium.multV0CRegion2);
-    oniumTree->Branch("multV0CRegion3",     &onium.multV0CRegion3);
+    oniumTree->Branch("multRegions",        onium.multRegions,       "onium.multRegions[3]/i");
+    oniumTree->Branch("multEta09Regions",   onium.multEta09Regions,  "onium.multEta09Regions[3]/i");
+    oniumTree->Branch("multEta1Regions",    onium.multEta1Regions,   "onium.multEta1Regions[3]/i");
+    oniumTree->Branch("multV0APosRegions",  onium.multV0APosRegions, "onium.multV0APosRegions[3]/i");
+    oniumTree->Branch("multV0ANegRegions",  onium.multV0ANegRegions, "onium.multV0ANegRegions[3]/i");
+    oniumTree->Branch("multV0CPosRegions",  onium.multV0CPosRegions, "onium.multV0CPosRegions[3]/i");
+    oniumTree->Branch("multV0CNegRegions",  onium.multV0CNegRegions, "onium.multV0CNegRegions[3]/i");
 
 
     // start pythia
@@ -244,18 +230,22 @@ int main(int argc, char** argv) {
     for(int iev=0; iev<nev; iev++) {
 
         if(!pythia.next()) continue;
-        mult      = 0; // mult in eta +- inf.
-        multEta09 = 0; // mult in eta +-0.9
-        multEta1  = 0; // mult in eta +-1.0
-        multV0A   = 0; // mult in V0A acceptance
-        multV0C   = 0; // mult in V0C acceptance
+        multFull   = 0; // mult in eta +- inf.
+        multEta09  = 0; // mult in eta +-0.9
+        multEta1   = 0; // mult in eta +-1.0
+        multV0APos = 0; // mult in V0APos acceptance
+        multV0ANeg = 0; // mult in V0ANeg acceptance
+        multV0CPos = 0; // mult in V0CPos acceptance
+        multV0CNeg = 0; // mult in V0CNeg acceptance
 
         // multiplicity in a randomly chosen 120 degree phi region
-        multRegionRnd      = 0;
-        multEta09RegionRnd = 0;
-        multEta1RegionRnd  = 0;
-        multV0ARegionRnd   = 0;
-        multV0CRegionRnd   = 0;
+        multRegionRnd       = 0;
+        multEta09RegionRnd  = 0;
+        multEta1RegionRnd   = 0;
+        multV0APosRegionRnd = 0;
+        multV0ANegRegionRnd = 0;
+        multV0CPosRegionRnd = 0;
+        multV0CNegRegionRnd = 0;
         
         // collision type: single, double, central or non-diffractive,
         //   see http://home.thep.lu.se/~torbjorn/pythia82html/QCDProcesses.html
@@ -274,13 +264,16 @@ int main(int argc, char** argv) {
         for(int iPart=0; iPart<pythia.event.size(); iPart++) {
             Particle* part = &pythia.event[iPart];
             if(isPrimaryChargedALICE(iPart, pythia)) {
-                ++mult;
+                ++multFull;
                 if(abs(part->eta())<0.9)              ++multEta09;
                 else if(abs(part->eta())<1.0)         ++multEta1;
-                else if(inV0Aacceptance(part->eta())) ++multV0A;
-                else if(inV0Cacceptance(part->eta())) ++multV0C;
+                else if(inV0APosAcceptance(part->eta())) ++multV0APos;
+                else if(inV0ANegAcceptance(part->eta())) ++multV0ANeg;
+                else if(inV0CPosAcceptance(part->eta())) ++multV0CPos;
+                else if(inV0CNegAcceptance(part->eta())) ++multV0CNeg;
                 fillRegionRandom(multRegionRnd, multEta09RegionRnd, multEta1RegionRnd,
-                                 multV0ARegionRnd, multV0CRegionRnd,
+                                 multV0APosRegionRnd, multV0ANegRegionRnd,
+                                 multV0CPosRegionRnd, multV0CNegRegionRnd,
                                  abs(part->phi())/M_PI, part->eta());
             }
 
@@ -332,12 +325,22 @@ int main(int argc, char** argv) {
 }
 
 
-bool inV0Aacceptance(float eta) {
+bool inV0APosAcceptance(float eta) {
     return eta > 2.8 && eta < 5.1;
 }
 
 
-bool inV0Cacceptance(float eta) {
+bool inV0ANegAcceptance(float eta) {
+    return eta < -2.8 && eta > -5.1;
+}
+
+
+bool inV0CPosAcceptance(float eta) {
+    return eta < 3.7 && eta > 1.7;
+}
+
+
+bool inV0CNegAcceptance(float eta) {
     return eta > -3.7 && eta < -1.7;
 }
 
@@ -465,45 +468,53 @@ bool isLongLived(unsigned int pdg) {
 }
 
 
-void fillRegions(unsigned short &multRegion1, unsigned short &multEta09Region1, unsigned short &multEta1Region1,
-                 unsigned short &multV0ARegion1, unsigned short &multV0CRegion1,
-                 unsigned short &multRegion2, unsigned short &multEta09Region2, unsigned short &multEta1Region2,
-                 unsigned short &multV0ARegion2, unsigned short &multV0CRegion2,
-                 unsigned short &multRegion3, unsigned short &multEta09Region3, unsigned short &multEta1Region3,
-                 unsigned short &multV0ARegion3, unsigned short &multV0CRegion3,
+void fillRegions(unsigned short (&multRegions)[3], unsigned short (&multEta09Regions)[3],
+                 unsigned short (&multEta1Regions)[3],
+                 unsigned short (&multV0APosRegions)[3], unsigned short (&multV0ANegRegions)[3],
+                 unsigned short (&multV0CPosRegions)[3], unsigned short (&multV0CNegRegions)[3],
                  double phi, double eta) {
     if(phi<1./3.) {
-        ++multRegion1;
-        if(abs(eta)<0.9)              ++multEta09Region1;
-        else if(abs(eta)<1.0)         ++multEta1Region1;
-        else if(inV0Aacceptance(eta)) ++multV0ARegion1;
-        else if(inV0Cacceptance(eta)) ++multV0CRegion1;
+        ++multRegions[0];
+        if(abs(eta)<0.9)                 ++multEta09Regions[0];
+        else if(abs(eta)<1.0)            ++multEta1Regions[0];
+        else if(inV0APosAcceptance(eta)) ++multV0APosRegions[0];
+        else if(inV0ANegAcceptance(eta)) ++multV0ANegRegions[0];
+        else if(inV0CPosAcceptance(eta)) ++multV0CPosRegions[0];
+        else if(inV0CNegAcceptance(eta)) ++multV0CNegRegions[0];
     }
     else if(phi<2./3) {
-        ++multRegion2;
-        if(abs(eta)<0.9)              ++multEta09Region2;
-        else if(abs(eta)<1.0)         ++multEta1Region2;
-        else if(inV0Aacceptance(eta)) ++multV0ARegion2;
-        else if(inV0Cacceptance(eta)) ++multV0CRegion2;
+        ++multRegions[1];
+        if(abs(eta)<0.9)                 ++multEta09Regions[1];
+        else if(abs(eta)<1.0)            ++multEta1Regions[1];
+        else if(inV0APosAcceptance(eta)) ++multV0APosRegions[1];
+        else if(inV0ANegAcceptance(eta)) ++multV0ANegRegions[1];
+        else if(inV0CPosAcceptance(eta)) ++multV0CPosRegions[1];
+        else if(inV0CNegAcceptance(eta)) ++multV0CNegRegions[1];
     }
     else {
-        ++multRegion3;
-        if(abs(eta)<0.9)              ++multEta09Region3;
-        else if(abs(eta)<1.0)         ++multEta1Region3;
-        else if(inV0Aacceptance(eta)) ++multV0ARegion3;
-        else if(inV0Cacceptance(eta)) ++multV0CRegion3;
+        ++multRegions[2];
+        if(abs(eta)<0.9)                 ++multEta09Region[2];
+        else if(abs(eta)<1.0)            ++multEta1Region[2];
+        else if(inV0APosAcceptance(eta)) ++multV0APosRegion[2];
+        else if(inV0ANegAcceptance(eta)) ++multV0ANegRegion[2];
+        else if(inV0CPosAcceptance(eta)) ++multV0CPosRegion[2];
+        else if(inV0CNegAcceptance(eta)) ++multV0CNegRegion[2];
     }
 }
 
-void fillRegionRandom(unsigned short &multRegion, unsigned short &multEta09Region, unsigned short &multEta1Region,
-                      unsigned short &multV0ARegion,  unsigned short &multV0CRegion,
+void fillRegionRandom(unsigned short &multRegion, unsigned short &multEta09Region,
+                      unsigned short &multEta1Region,
+                      unsigned short &multV0APosRegion, unsigned short &multV0ANegRegion,
+                      unsigned short &multV0CPosRegion, unsigned short &multV0CNegRegion,
                       double phi, double eta) {
     if(phi<1./3.) {
         ++multRegion;
-        if(abs(eta)<0.9)              ++multEta09Region;
-        else if(abs(eta)<1.0)         ++multEta1Region;
-        else if(inV0Aacceptance(eta)) ++multV0ARegion;
-        else if(inV0Cacceptance(eta)) ++multV0CRegion;
+        if(abs(eta)<0.9)                 ++multEta09Region;
+        else if(abs(eta)<1.0)            ++multEta1Region;
+        else if(inV0APosAcceptance(eta)) ++multV0APosRegion;
+        else if(inV0ANegAcceptance(eta)) ++multV0ANegRegion;
+        else if(inV0CPosAcceptance(eta)) ++multV0CPosRegion;
+        else if(inV0CNegAcceptance(eta)) ++multV0CNegRegion;
     }
 }
 
@@ -514,12 +525,9 @@ void fillRegionsWrtQuarkonium(Quarkonium &found, Pythia& pythia, double phi_quar
             float phi_assoc = part2->phi() / M_PI;
             float deltaPhi  = abs(phi_assoc - phi_quarkonium);
             if(deltaPhi>1) deltaPhi = 2 - deltaPhi;
-            fillRegions(found.multRegion1, found.multEta09Region1, found.multEta1Region1,
-                        found.multV0ARegion1, found.multV0CRegion1,
-                        found.multRegion2, found.multEta09Region2, found.multEta1Region2,
-                        found.multV0ARegion2, found.multV0CRegion2,
-                        found.multRegion3, found.multEta09Region3, found.multEta1Region3,
-                        found.multV0ARegion3, found.multV0CRegion3,
+            fillRegions(found.multRegions, found.multEta09Regions, found.multEta1Regions,
+                        found.multV0APosRegions, found.multV0ANegRegions,
+                        found.multV0CPosRegions, found.multV0CNegRegions,
                         deltaPhi, part2->eta());
         }
     }
