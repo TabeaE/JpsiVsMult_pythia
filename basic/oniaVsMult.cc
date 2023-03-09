@@ -253,11 +253,11 @@ int main(int argc, char** argv) {
         // number of hard interactions (0 is for elastic and diffractive events)
         nMPI = pythia.info.nMPI();
 
-        weight    = pythia.info.hiInfo.weight();
-        nCollTot  = pythia.info.hiInfo.nCollTot();
-        nPartTarg = pythia.info.hiInfo.nPartTarg();
-        nAbsTarg  = pythia.info.hiInfo.nAbsTarg();
-        nDiffTarg = pythia.info.hiInfo.nDiffTarg();
+        weight    = pythia.info.hiInfo->weight();
+        nCollTot  = pythia.info.hiInfo->nCollTot();
+        nPartTarg = pythia.info.hiInfo->nPartTarg();
+        nAbsTarg  = pythia.info.hiInfo->nAbsTarg();
+        nDiffTarg = pythia.info.hiInfo->nDiffTarg();
 
         vector <Quarkonium> foundQuarkoniumPerEvent;
         // here the loop over the particles starts
