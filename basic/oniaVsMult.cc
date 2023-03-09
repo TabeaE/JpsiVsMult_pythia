@@ -253,11 +253,11 @@ int main(int argc, char** argv) {
         // number of hard interactions (0 is for elastic and diffractive events)
         nMPI = pythia.info.nMPI();
 
-        weight    = pythia.info.hiinfo.weight();
-        nCollTot  = pythia.info.hiinfo.nCollTot();
-        nPartTarg = pythia.info.hiinfo.nPartTarg();
-        nAbsTarg  = pythia.info.hiinfo.nAbsTarg();
-        nDiffTarg = pythia.info.hiinfo.nDiffTarg();
+        weight    = pythia.info.hiInfo.weight();
+        nCollTot  = pythia.info.hiInfo.nCollTot();
+        nPartTarg = pythia.info.hiInfo.nPartTarg();
+        nAbsTarg  = pythia.info.hiInfo.nAbsTarg();
+        nDiffTarg = pythia.info.hiInfo.nDiffTarg();
 
         vector <Quarkonium> foundQuarkoniumPerEvent;
         // here the loop over the particles starts
@@ -493,12 +493,12 @@ void fillRegions(unsigned short (&multRegions)[3], unsigned short (&multEta09Reg
     }
     else {
         ++multRegions[2];
-        if(abs(eta)<0.9)                 ++multEta09Region[2];
-        else if(abs(eta)<1.0)            ++multEta1Region[2];
-        else if(inV0APosAcceptance(eta)) ++multV0APosRegion[2];
-        else if(inV0ANegAcceptance(eta)) ++multV0ANegRegion[2];
-        else if(inV0CPosAcceptance(eta)) ++multV0CPosRegion[2];
-        else if(inV0CNegAcceptance(eta)) ++multV0CNegRegion[2];
+        if(abs(eta)<0.9)                 ++multEta09Regions[2];
+        else if(abs(eta)<1.0)            ++multEta1Regions[2];
+        else if(inV0APosAcceptance(eta)) ++multV0APosRegions[2];
+        else if(inV0ANegAcceptance(eta)) ++multV0ANegRegions[2];
+        else if(inV0CPosAcceptance(eta)) ++multV0CPosRegions[2];
+        else if(inV0CNegAcceptance(eta)) ++multV0CNegRegions[2];
     }
 }
 
