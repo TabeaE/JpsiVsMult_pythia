@@ -72,6 +72,9 @@ struct Quarkonium {
     unsigned short multRegion1;
     unsigned short multRegion2;
     unsigned short multRegion3;
+    unsigned short multEta09Region1;
+    unsigned short multEta09Region2;
+    unsigned short multEta09Region3;
     unsigned short multEta1Region1;
     unsigned short multEta1Region2;
     unsigned short multEta1Region3;
@@ -93,6 +96,9 @@ struct Quarkonium {
         y(0.),
         initialPdg(0),
         decayChannel(0),
+        multEta09Region1(0),
+        multEta09Region2(0),
+        multEta09Region3(0),
         multEta1Region1(0),
         multEta1Region2(0),
         multEta1Region3(0),
@@ -114,18 +120,21 @@ struct Quarkonium {
 void traceBackQuarkonium(Quarkonium &found, unsigned short particle, Pythia &pythia);
 bool isOnium(int pdg);
 
-void fillRegions(unsigned short &multRegion1,       unsigned short &multEta1Region1,
+void fillRegions(unsigned short &multRegion1,
+                 unsigned short &multEta09Region1,  unsigned short &multEta1Region1,
                  unsigned short &multV0APosRegion1, unsigned short &multV0ANegRegion1,
                  unsigned short &multV0CPosRegion1, unsigned short &multV0CNegRegion1,
-                 unsigned short &multRegion2,       unsigned short &multEta1Region2,
+                 unsigned short &multRegion2,
+                 unsigned short &multEta09Region2,  unsigned short &multEta1Region2,
                  unsigned short &multV0APosRegion2, unsigned short &multV0ANegRegion2,
                  unsigned short &multV0CPosRegion2, unsigned short &multV0CNegRegion2,
-                 unsigned short &multRegion3,       unsigned short &multEta1Region3,
+                 unsigned short &multRegion3,
+                 unsigned short &multEta09Region3,  unsigned short &multEta1Region3,
                  unsigned short &multV0APosRegion3, unsigned short &multV0ANegRegion3,
                  unsigned short &multV0CPosRegion3, unsigned short &multV0CNegRegion3,
                  double phi, double eta);
-void fillRegionRandom(unsigned short &multRegion, unsigned short &multEta09Region,
-                      unsigned short &multEta1Region,
+void fillRegionRandom(unsigned short &multRegion,
+                      unsigned short &multEta09Region,  unsigned short &multEta1Region,
                       unsigned short &multV0APosRegion, unsigned short &multV0ANegRegion,
                       unsigned short &multV0CPosRegion, unsigned short &multV0CNegRegion,
                       double phi, double eta);
@@ -227,6 +236,9 @@ int main(int argc, char** argv) {
     oniumTree->Branch("multRegion1",        &onium.multRegion1 );
     oniumTree->Branch("multRegion2",        &onium.multRegion2);
     oniumTree->Branch("multRegion3",        &onium.multRegion3);
+    oniumTree->Branch("multEta09Region1",   &onium.multEta09Region1);
+    oniumTree->Branch("multEta09Region2",   &onium.multEta09Region2);
+    oniumTree->Branch("multEta09Region3",   &onium.multEta09Region3);
     oniumTree->Branch("multEta1Region1",    &onium.multEta1Region1);
     oniumTree->Branch("multEta1Region2",    &onium.multEta1Region2);
     oniumTree->Branch("multEta1Region3",    &onium.multEta1Region3);
@@ -297,8 +309,8 @@ int main(int argc, char** argv) {
             Particle* part = &pythia.event[iPart];
             if(isPrimaryChargedALICE(iPart, pythia)) {
                 ++multFull;
-                if(abs(part->eta())<0.9)              ++multEta09;
-                else if(abs(part->eta())<1.0)         ++multEta1;
+                if(abs(part->eta())<0.9)                 ++multEta09;
+                else if(abs(part->eta())<1.0)            ++multEta1;
                 else if(inV0APosAcceptance(part->eta())) ++multV0APos;
                 else if(inV0ANegAcceptance(part->eta())) ++multV0ANeg;
                 else if(inV0CPosAcceptance(part->eta())) ++multV0CPos;
@@ -500,13 +512,16 @@ bool isLongLived(unsigned int pdg) {
 }
 
 
-void fillRegions(unsigned short &multRegion1,       unsigned short &multEta1Region1,
+void fillRegions(unsigned short &multRegion1,
+                 unsigned short &multEta09Region1,  unsigned short &multEta1Region1,
                  unsigned short &multV0APosRegion1, unsigned short &multV0ANegRegion1,
                  unsigned short &multV0CPosRegion1, unsigned short &multV0CNegRegion1,
-                 unsigned short &multRegion2,       unsigned short &multEta1Region2,
+                 unsigned short &multRegion2,
+                 unsigned short &multEta09Region2,  unsigned short &multEta1Region2,
                  unsigned short &multV0APosRegion2, unsigned short &multV0ANegRegion2,
                  unsigned short &multV0CPosRegion2, unsigned short &multV0CNegRegion2,
-                 unsigned short &multRegion3,       unsigned short &multEta1Region3,
+                 unsigned short &multRegion3,
+                 unsigned short &multEta09Region3,  unsigned short &multEta1Region3,
                  unsigned short &multV0APosRegion3, unsigned short &multV0ANegRegion3,
                  unsigned short &multV0CPosRegion3, unsigned short &multV0CNegRegion3,
                  double phi, double eta) {
@@ -539,8 +554,8 @@ void fillRegions(unsigned short &multRegion1,       unsigned short &multEta1Regi
     }
 }
 
-void fillRegionRandom(unsigned short &multRegion, unsigned short &multEta09Region,
-                      unsigned short &multEta1Region,
+void fillRegionRandom(unsigned short &multRegion,
+                      unsigned short &multEta09Region,  unsigned short &multEta1Region,
                       unsigned short &multV0APosRegion, unsigned short &multV0ANegRegion,
                       unsigned short &multV0CPosRegion, unsigned short &multV0CNegRegion,
                       double phi, double eta) {
@@ -562,13 +577,16 @@ void fillRegionsWrtQuarkonium(Quarkonium &found, Pythia& pythia, double phi_quar
             float phi_assoc = part2->phi() / M_PI;
             float deltaPhi  = abs(phi_assoc - phi_quarkonium);
             if(deltaPhi>1) deltaPhi = 2 - deltaPhi;
-            fillRegions(found.multRegion1,       found.multEta1Region1,
+            fillRegions(found.multRegion1,
+                        found.multEta09Region1,  found.multEta1Region1,
                         found.multV0APosRegion1, found.multV0ANegRegion1,
                         found.multV0CPosRegion1, found.multV0CNegRegion1,
-                        found.multRegion2,       found.multEta1Region2,
+                        found.multRegion2,
+                        found.multEta09Region2,  found.multEta1Region2,
                         found.multV0APosRegion2, found.multV0ANegRegion2,
                         found.multV0CPosRegion2, found.multV0CNegRegion2,
-                        found.multRegion3,       found.multEta1Region3,
+                        found.multRegion3,
+                        found.multEta09Region3,  found.multEta1Region3,
                         found.multV0APosRegion3, found.multV0ANegRegion3,
                         found.multV0CPosRegion3, found.multV0CNegRegion3,
                         deltaPhi, part2->eta());
