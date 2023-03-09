@@ -154,7 +154,6 @@ int main(int argc, char** argv) {
     unsigned short multV0CPosRegionRnd;
     unsigned short multV0CNegRegionRnd;
     double weight;
-    unsigned short nCollTot;
     unsigned short nPartTarg;
     unsigned short nAbsTarg;
     unsigned short nDiffTarg;
@@ -180,7 +179,6 @@ int main(int argc, char** argv) {
     eventTree->Branch("multV0CPosRegionRnd", &multV0CPosRegionRnd);
     eventTree->Branch("multV0CNegRegionRnd", &multV0CNegRegionRnd);
     eventTree->Branch("weight",              &weight);     // weight of the current event.
-    eventTree->Branch("nCollTot",            &nCollTot);   // nof separate sub-collisions
     eventTree->Branch("nPartTarg",           &nPartTarg);  // nof interacting target nucleons
     eventTree->Branch("nAbsTarg",            &nAbsTarg);   // nof absorptively wounded target nucleons
     eventTree->Branch("nDiffTarg",           &nDiffTarg);  // nof diffrectively wounded target nucleons
@@ -254,7 +252,6 @@ int main(int argc, char** argv) {
         nMPI = pythia.info.nMPI();
 
         weight    = pythia.info.hiInfo->weight();
-        nCollTot  = pythia.info.hiInfo->nCollTot();
         nPartTarg = pythia.info.hiInfo->nPartTarg();
         nAbsTarg  = pythia.info.hiInfo->nAbsTarg();
         nDiffTarg = pythia.info.hiInfo->nDiffTarg();
