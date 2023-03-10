@@ -179,6 +179,7 @@ int main(int argc, char** argv) {
     // prepare trees
     unsigned short multFull, multEta09, multEta1, multV0APos, multV0ANeg, multV0CPos, multV0CNeg, nMPI;
     unsigned char  type;
+    double chEta; 
     unsigned short multRegionRnd;
     unsigned short multEta09RegionRnd;
     unsigned short multEta1RegionRnd;
@@ -203,7 +204,8 @@ int main(int argc, char** argv) {
     eventTree->Branch("multV0CPos",          &multV0CPos);
     eventTree->Branch("multV0CNeg",          &multV0CNeg);
     eventTree->Branch("type",                &type);
-    eventTree->Branch("nMPI",                &nMPI);
+    eventTree->Branch("nMPI",                &nMPI);             
+    eventTree->Branch("chEta",               &chEta);
     eventTree->Branch("multRegionRnd",       &multRegionRnd);
     eventTree->Branch("multEta09RegionRnd",  &multEta09RegionRnd);
     eventTree->Branch("multEta1RegionRnd",   &multEta1RegionRnd);
@@ -227,7 +229,8 @@ int main(int argc, char** argv) {
     oniumTree->Branch("multV0CPos",         &multV0CPos);
     oniumTree->Branch("multV0CNeg",         &multV0CNeg);
     oniumTree->Branch("nMPI",               &nMPI);
-    oniumTree->Branch("type",               &type);
+    oniumTree->Branch("type",               &type);                                                                 
+    oniumTree->Branch("chEta",              &chEta);                                                              
     oniumTree->Branch("onium.pdg",          &onium.pdg);
     oniumTree->Branch("onium.decayChannel", &onium.decayChannel);
     oniumTree->Branch("onium.pt",           &onium.pt);
@@ -297,7 +300,7 @@ int main(int argc, char** argv) {
         type = pythia.info.code();
         // number of hard interactions (0 is for elastic and diffractive events)
         nMPI = pythia.info.nMPI();
-
+        
         weight    = pythia.info.hiInfo->weight();
         nPartTarg = pythia.info.hiInfo->nPartTarg();
         nAbsTarg  = pythia.info.hiInfo->nAbsTarg();
@@ -308,6 +311,7 @@ int main(int argc, char** argv) {
         for(int iPart=0; iPart<pythia.event.size(); iPart++) {
             Particle* part = &pythia.event[iPart];
             if(isPrimaryChargedALICE(iPart, pythia)) {
+	        chEta = part->eta();
                 ++multFull;
                 if(abs(part->eta())<0.9)                 ++multEta09;
                 else if(abs(part->eta())<1.0)            ++multEta1;
@@ -329,9 +333,9 @@ int main(int argc, char** argv) {
                 // avoid double counting ("J/psi -> J/psi")
                 if(!(pdgDau1==pdg) && !(pdgDau2==pdg)) {
                     Quarkonium found;
-                    found.pt  = part->pT();
-                    found.y   = part->y();
-                    found.pdg = pdg;
+                    found.pt    = part->pT();
+                    found.y     = part->y();
+                    found.pdg   = pdg;
                     // look for electrons(11) and muons(13)
                     if     (abs(pdgDau1)==11 && abs(pdgDau2)==11) found.decayChannel = 1;
                     else if(abs(pdgDau1)==13 && abs(pdgDau2)==13) found.decayChannel = -1;
