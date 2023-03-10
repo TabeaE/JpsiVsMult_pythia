@@ -310,10 +310,10 @@ int main(int argc, char** argv) {
             if(isPrimaryChargedALICE(iPart, pythia)) {
                 ++multFull;
                 if(abs(part->eta())<0.9)                 ++multEta09;
-                else if(abs(part->eta())<1.0)            ++multEta1;
+                if(abs(part->eta())<1.0)                 ++multEta1;
                 else if(inV0APosAcceptance(part->eta())) ++multV0APos;
                 else if(inV0ANegAcceptance(part->eta())) ++multV0ANeg;
-                else if(inV0CPosAcceptance(part->eta())) ++multV0CPos;
+                if(inV0CPosAcceptance(part->eta()))      ++multV0CPos;
                 else if(inV0CNegAcceptance(part->eta())) ++multV0CNeg;
                 fillRegionRandom(multRegionRnd, multEta09RegionRnd, multEta1RegionRnd,
                                  multV0APosRegionRnd, multV0ANegRegionRnd,
@@ -528,28 +528,28 @@ void fillRegions(unsigned short &multRegion1,
     if(phi<1./3.) {
         ++multRegion1;
         if(abs(eta)<0.9)                 ++multEta09Region1;
-        else if(abs(eta)<1.0)            ++multEta1Region1;
+        if(abs(eta)<1.0)                 ++multEta1Region1;
         else if(inV0APosAcceptance(eta)) ++multV0APosRegion1;
         else if(inV0ANegAcceptance(eta)) ++multV0ANegRegion1;
-        else if(inV0CPosAcceptance(eta)) ++multV0CPosRegion1;
+        if(inV0CPosAcceptance(eta))      ++multV0CPosRegion1;
         else if(inV0CNegAcceptance(eta)) ++multV0CNegRegion1;
     }
     else if(phi<2./3) {
         ++multRegion2;
         if(abs(eta)<0.9)                 ++multEta09Region2;
-        else if(abs(eta)<1.0)            ++multEta1Region2;
+        if(abs(eta)<1.0)                 ++multEta1Region2;
         else if(inV0APosAcceptance(eta)) ++multV0APosRegion2;
         else if(inV0ANegAcceptance(eta)) ++multV0ANegRegion2;
-        else if(inV0CPosAcceptance(eta)) ++multV0CPosRegion2;
+        if(inV0CPosAcceptance(eta))      ++multV0CPosRegion2;
         else if(inV0CNegAcceptance(eta)) ++multV0CNegRegion2;
     }
     else {
         ++multRegion3;
         if(abs(eta)<0.9)                 ++multEta09Region3;
-        else if(abs(eta)<1.0)            ++multEta1Region3;
+        if(abs(eta)<1.0)                 ++multEta1Region3;
         else if(inV0APosAcceptance(eta)) ++multV0APosRegion3;
         else if(inV0ANegAcceptance(eta)) ++multV0ANegRegion3;
-        else if(inV0CPosAcceptance(eta)) ++multV0CPosRegion3;
+        if(inV0CPosAcceptance(eta))      ++multV0CPosRegion3;
         else if(inV0CNegAcceptance(eta)) ++multV0CNegRegion3;
     }
 }
@@ -562,10 +562,10 @@ void fillRegionRandom(unsigned short &multRegion,
     if(phi<1./3.) {
         ++multRegion;
         if(abs(eta)<0.9)                 ++multEta09Region;
-        else if(abs(eta)<1.0)            ++multEta1Region;
+        if(abs(eta)<1.0)                 ++multEta1Region;
         else if(inV0APosAcceptance(eta)) ++multV0APosRegion;
         else if(inV0ANegAcceptance(eta)) ++multV0ANegRegion;
-        else if(inV0CPosAcceptance(eta)) ++multV0CPosRegion;
+        if(inV0CPosAcceptance(eta))      ++multV0CPosRegion;
         else if(inV0CNegAcceptance(eta)) ++multV0CNegRegion;
     }
 }
