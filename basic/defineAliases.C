@@ -7,17 +7,25 @@ void defineAliases(TTree *eventTree, TTree *oniumTree) {
     
     
     // V0M = V0A + V0C. 
-    eventTree->SetAlias("multV0M", "(multV0A+multV0C)");
-    oniumTree->SetAlias("multV0M", "(multV0A+multV0C)");
+    eventTree->SetAlias("multV0MpPb", "(multV0APos+multV0CNeg)");
+    oniumTree->SetAlias("multV0MpPb", "(multV0APos+multV0CNeg)");
+    eventTree->SetAlias("multV0MPbp", "(multV0ANeg+multV0CPos)");
+    oniumTree->SetAlias("multV0MPbp", "(multV0ANeg+multV0CPos)");
     
-    eventTree->SetAlias("multV0MRegion1", "(multV0ARegion1+multV0CRegion1)");
-    oniumTree->SetAlias("multV0MRegion1", "(multV0ARegion1+multV0CRegion1)");
+    eventTree->SetAlias("multV0MpPbRegion1", "(multV0APosRegion1+multV0CNegRegion1)");
+    oniumTree->SetAlias("multV0MpPbRegion1", "(multV0APosRegion1+multV0CNegRegion1)");
+    eventTree->SetAlias("multV0MPbpRegion1", "(multV0ANegRegion1+multV0CPosRegion1)");
+    oniumTree->SetAlias("multV0MPbpRegion1", "(multV0ANegRegion1+multV0CPosRegion1)");
     
-    eventTree->SetAlias("multV0MRegion2", "(multV0ARegion2+multV0CRegion2)");
-    oniumTree->SetAlias("multV0MRegion2", "(multV0ARegion2+multV0CRegion2)");
+    eventTree->SetAlias("multV0MpPbRegion2", "(multV0APosRegion2+multV0CNegRegion2)");
+    oniumTree->SetAlias("multV0MpPbRegion2", "(multV0APosRegion2+multV0CNegRegion2)");
+    eventTree->SetAlias("multV0MPbpRegion2", "(multV0ANegRegion2+multV0CPosRegion2)");
+    oniumTree->SetAlias("multV0MPbpRegion2", "(multV0ANegRegion2+multV0CPosRegion2)");
     
-    eventTree->SetAlias("multV0MRegion3", "(multV0ARegion3+multV0CRegion3)");
-    oniumTree->SetAlias("multV0MRegion3", "(multV0ARegion3+multV0CRegion3)");
+    eventTree->SetAlias("multV0MpPbRegion3", "(multV0APosRegion3+multV0CNegRegion3)");
+    oniumTree->SetAlias("multV0MpPbRegion3", "(multV0APosRegion3+multV0CNegRegion3)");
+    eventTree->SetAlias("multV0MPbpRegion3", "(multV0ANegRegion3+multV0CPosRegion3)");
+    oniumTree->SetAlias("multV0MPbpRegion3", "(multV0ANegRegion3+multV0CPosRegion3)");
     
     
     // for the event tree, the 3 regions are chosen randomly. 
@@ -32,17 +40,25 @@ void defineAliases(TTree *eventTree, TTree *oniumTree) {
     eventTree->SetAlias("multEta1Region2", "multEta1RegionRnd");
     eventTree->SetAlias("multEta1Region3", "multEta1RegionRnd");
     
-    eventTree->SetAlias("multV0ARegion1", "multV0ARegionRnd");
-    eventTree->SetAlias("multV0ARegion2", "multV0ARegionRnd");
-    eventTree->SetAlias("multV0ARegion3", "multV0ARegionRnd");
+    eventTree->SetAlias("multV0APosRegion1", "multV0APosRegionRnd");
+    eventTree->SetAlias("multV0APosRegion2", "multV0APosRegionRnd");
+    eventTree->SetAlias("multV0APosRegion3", "multV0APosRegionRnd");
+    eventTree->SetAlias("multV0ANegRegion1", "multV0ANegRegionRnd");
+    eventTree->SetAlias("multV0ANegRegion2", "multV0ANegRegionRnd");
+    eventTree->SetAlias("multV0ANegRegion3", "multV0ANegRegionRnd");
     
-    eventTree->SetAlias("multV0CRegion1", "multV0CRegionRnd");
-    eventTree->SetAlias("multV0CRegion2", "multV0CRegionRnd");
-    eventTree->SetAlias("multV0CRegion3", "multV0CRegionRnd");
+    eventTree->SetAlias("multV0CPosRegion1", "multV0CPosRegionRnd");
+    eventTree->SetAlias("multV0CPosRegion2", "multV0CPosRegionRnd");
+    eventTree->SetAlias("multV0CPosRegion3", "multV0CPosRegionRnd");
+    eventTree->SetAlias("multV0CNegRegion1", "multV0CNegRegionRnd");
+    eventTree->SetAlias("multV0CNegRegion2", "multV0CNegRegionRnd");
+    eventTree->SetAlias("multV0CNegRegion3", "multV0CNegRegionRnd");
     
-    // V0AND cut
-    eventTree->SetAlias("V0AND", "(multV0A>0 && multV0C>0)");
-    oniumTree->SetAlias("V0AND", "(multV0A>0 && multV0C>0)");
+//     // V0AND cut
+//     eventTree->SetAlias("V0ANDpPb", "(multV0APos>0 && multV0CNeg>0)");
+//     oniumTree->SetAlias("V0ANDpPb", "(multV0APos>0 && multV0CNeg>0)");
+//     eventTree->SetAlias("V0ANDPbp", "(multV0ANeg>0 && multV0CPos>0)");
+//     oniumTree->SetAlias("V0ANDPbp", "(multV0ANeg>0 && multV0CPos>0)");
 
     // INEL>0 cut
     eventTree->SetAlias("inel0", "(multEta1>0)");
