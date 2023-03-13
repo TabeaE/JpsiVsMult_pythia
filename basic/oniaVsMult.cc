@@ -119,10 +119,10 @@ struct Quarkonium {
 };
 
 
-struct Event {
-    unsigned short multFull,
+struct ChEvent {
+    unsigned short multFull;
     TClonesArray* tracks;
-    Event():
+    ChEvent():
         multFull(0),
         tracks(0x0)
     {
@@ -134,8 +134,8 @@ struct Track {
     double eta;
     Track():
         eta(0.)
-    {}
-}
+    {};
+};
 
 
 void traceBackQuarkonium(Quarkonium &found, unsigned short particle, Pythia &pythia);
@@ -236,8 +236,8 @@ int main(int argc, char** argv) {
     eventTree->Branch("nDiffTarg",           &nDiffTarg);  // nof diffrectively wounded target nucleons
 
     TTree* eventTestTree = new TTree("eventTestTree", "test event information");
-    Event* testEvent;
-    eventTestTree->Branch("testEvent", &testEvent, 16000, 99)
+    ChEvent* testEvent = new ChEvent();
+    eventTestTree->Branch("testEvent", &testEvent, 16000, 99);
 
     TTree* oniumTree = new TTree("oniumTree", "Onia information");
     Quarkonium onium;
