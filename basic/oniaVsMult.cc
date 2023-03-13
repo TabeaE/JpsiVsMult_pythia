@@ -118,6 +118,12 @@ struct Quarkonium {
     {};
 };
 
+struct Track {
+    double eta;
+    Track():
+        eta(0.)
+    {};
+};
 
 struct ChEvent {
     unsigned short multFull;
@@ -128,13 +134,6 @@ struct ChEvent {
     {
       tracks = new TClonesArray("Track", 100000);
     };
-};
-
-struct Track {
-    double eta;
-    Track():
-        eta(0.)
-    {};
 };
 
 
