@@ -49,15 +49,12 @@ using namespace std;
  *               so, it is possible to select events based on the V0M multiplicity, but plot as a function
  *               of nch in |eta| < 1
  *  - setSettings: string, name of input root file (in format onium_setSettings.root)
- *  - setEventClass: int, select event class
+ *  - setEventClass: int, select event class (inelastic events only)
  *                   0: Not-diffractive events
  *                   1: All inelastic events
  *                   2: Diffractive events
- *                   3: Not single-diffractive events
- *  - setEventTrigger: int, select event trigger
- *                     0: all events
- *                     1: V0AND
- *                     2: INEL>0
+ *                   3: Non single-diffractive events (NSD)
+ *  - selInel0: bool, if true then cut away events with 0 particles in |eta| < 1 (select INEL>0 events)
  *  - signalRapidity: int, cut on J/psi rapidity
  *        1: |y| < 0.9
  *        2:  2.5 < |y| <  4.0
@@ -75,7 +72,7 @@ void plotRelOrigin(
   int     estimator       = 1,
   TString setSettings     = "full",
   int     setEventClass   = 0,
-  int     setEventTrigger = 1,
+  bool    selInel0        = 1,
   int     signalRapidity  = 1,
   double  maxY            = 22,
   TString folder          = "."
@@ -117,7 +114,7 @@ TString settings;
 TString estimatorString = "";
 TString selectorString  = "";
 int eventClass;
-int eventTrigger;
+bool inel0;
 bool noMPI;
 bool noCR;
 
@@ -151,14 +148,14 @@ double errPerBin[nMultiplicityBins];
 
 
 void plotRelOrigin(int plotWhat, int selector, int estimator, TString setSettings, int setEventClass,
-                   int setEventTrigger, int signalRapidity, double maxY, TString folder) {
+                   bool selInel0, int signalRapidity, double maxY, TString folder) {
 
   gEnv->SetValue("Hist.Precision.1D", "double");
 
   // Initialize values
   settings     = setSettings;
   eventClass   = setEventClass;
-  eventTrigger = setEventTrigger;
+  inel0 = selInel0;
 
   noMPI = strstr(settings.Data(), "noMPI");
   noCR  = strstr(settings.Data(), "noCR");
@@ -220,24 +217,32 @@ void plotRelOrigin(int plotWhat, int selector, int estimator, TString setSetting
   TString eventCut;
   switch(eventClass) {
     case 0:  // Not-diffractive inelastic events
-      eventCut = (eventTrigger==2) ? "inelastic && !diffractive && inel0"
-               : (eventTrigger==1) ? "inelastic && !diffractive && V0AND"
-               :                     "inelastic && !diffractive";  // (eventTrigger==0, default)
+      eventCut = inel0 ? "inelastic && !diffractive && inel0"
+                       : "inelastic && !diffractive";  // (eventTrigger==0, default)
+//       eventCut = (eventTrigger==2) ? "inelastic && !diffractive && inel0"
+//                : (eventTrigger==1) ? "inelastic && !diffractive && V0AND"
+//                :                     "inelastic && !diffractive";  // (eventTrigger==0, default)
       break;
     case 1:  // All inelastic events
-      eventCut = (eventTrigger==2) ? "inelastic && inel0"
-               : (eventTrigger==1) ? "inelastic && V0AND"
-               :                     "inelastic";  // (eventTrigger==0: all events, default)
+      eventCut = inel0 ? "inelastic && inel0"
+                       : "inelastic";  // (eventTrigger==0: all events, default)
+//       eventCut = (eventTrigger==2) ? "inelastic && inel0"
+//                : (eventTrigger==1) ? "inelastic && V0AND"
+//                :                     "inelastic";  // (eventTrigger==0: all events, default)
       break;
     case 2:  // Diffractive events
-      eventCut = (eventTrigger==2) ? "diffractive && inel0"
-               : (eventTrigger==1) ? "diffractive && V0AND"
-               :                     "diffractive";  // (eventTrigger==0: all events, default)
+      eventCut = inel0 ? "diffractive && inel0"
+                       : "diffractive";  // (eventTrigger==0: all events, default)
+//       eventCut = (eventTrigger==2) ? "diffractive && inel0"
+//                : (eventTrigger==1) ? "diffractive && V0AND"
+//                :                     "diffractive";  // (eventTrigger==0: all events, default)
       break;
     case 3:  // Not single-diffractive events
-      eventCut = (eventTrigger==2) ? "NSD && inel0"
-               : (eventTrigger==1) ? "NSD && V0AND"
-               :                     "NSD";  // (eventTrigger==0: all events, default)
+      eventCut = inel0 ? "NSD && inel0"
+                       : "NSD";  // (eventTrigger==0: all events, default)
+//       eventCut = (eventTrigger==2) ? "NSD && inel0"
+//                : (eventTrigger==1) ? "NSD && V0AND"
+//                :                     "NSD";  // (eventTrigger==0: all events, default)
       break;
   }
   
@@ -335,22 +340,15 @@ void plot(TString commonCut, TString commonName, TString header, TString inclusi
       break;
   }
   
-  TString eventTriggerString = "";
-  switch(eventClass) {
-    case 1:  // V0AND
-      eventClassString = "V0AND";
-      title           += "V0AND";
-      break;
-    case 2:  // INEL>0
-      eventClassString = "INEL0";
-      title           += "INEL>0";
-      break;
+  TString inelString;
+  if(inel0){
+    inelString += "INEL0";
+    title      += ", INEL>0";
   }
-  
   if(noCR)  title += ", CR off";
   if(noMPI) title += ", MPI off";
   
-  TString folder1    = Form("%s%s%s", settings.Data(), eventClassString.Data(), eventTriggerString.Data());
+  TString folder1    = Form("%s%s%s", settings.Data(), eventClassString.Data(), inelString.Data());
   TString identifier = Form("%s_%s_%s", folder1.Data(), selectorString.Data(), estimatorString.Data());
   
   gSystem->mkdir(Form("output/%s", folder1.Data()));

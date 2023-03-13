@@ -44,6 +44,7 @@
 #include "TRandom3.h"
 #include "TROOT.h"
 #include "TTree.h"
+#include "TClonesArray.h"
 #include "Pythia8/Pythia.h"
 // You need to include this to get access to the HIInfo object for HeavyIons.
 #include "Pythia8/HeavyIons.h"
@@ -117,6 +118,26 @@ struct Quarkonium {
     {};
 };
 
+
+struct Event {
+    unsigned short multFull,
+    TClonesArray* tracks;
+    Event():
+        multFull(0),
+        tracks(0x0)
+    {
+      tracks = new TClonesArray("Track", 100000);
+    };
+};
+
+struct Track {
+    double eta;
+    Track():
+        eta(0.)
+    {}
+}
+
+
 void traceBackQuarkonium(Quarkonium &found, unsigned short particle, Pythia &pythia);
 bool isOnium(int pdg);
 
@@ -179,7 +200,6 @@ int main(int argc, char** argv) {
     // prepare trees
     unsigned short multFull, multEta09, multEta1, multV0APos, multV0ANeg, multV0CPos, multV0CNeg, nMPI;
     unsigned char  type;
-    double chEta; 
     unsigned short multRegionRnd;
     unsigned short multEta09RegionRnd;
     unsigned short multEta1RegionRnd;
@@ -192,10 +212,8 @@ int main(int argc, char** argv) {
     unsigned short nAbsTarg;
     unsigned short nDiffTarg;
 
-    TTree* eventTree = new TTree("eventTree", "event information");
-
-
     // define the tree for minimum bias events
+    TTree* eventTree = new TTree("eventTree", "event information");
     eventTree->Branch("multFull",            &multFull);
     eventTree->Branch("multEta09",           &multEta09);
     eventTree->Branch("multEta1",            &multEta1);
@@ -204,8 +222,7 @@ int main(int argc, char** argv) {
     eventTree->Branch("multV0CPos",          &multV0CPos);
     eventTree->Branch("multV0CNeg",          &multV0CNeg);
     eventTree->Branch("type",                &type);
-    eventTree->Branch("nMPI",                &nMPI);             
-    eventTree->Branch("chEta",               &chEta);
+    eventTree->Branch("nMPI",                &nMPI);
     eventTree->Branch("multRegionRnd",       &multRegionRnd);
     eventTree->Branch("multEta09RegionRnd",  &multEta09RegionRnd);
     eventTree->Branch("multEta1RegionRnd",   &multEta1RegionRnd);
@@ -218,6 +235,9 @@ int main(int argc, char** argv) {
     eventTree->Branch("nAbsTarg",            &nAbsTarg);   // nof absorptively wounded target nucleons
     eventTree->Branch("nDiffTarg",           &nDiffTarg);  // nof diffrectively wounded target nucleons
 
+    TTree* eventTestTree = new TTree("eventTestTree", "test event information");
+    Event* testEvent;
+    eventTestTree->Branch("testEvent", &testEvent, 16000, 99)
 
     TTree* oniumTree = new TTree("oniumTree", "Onia information");
     Quarkonium onium;
@@ -230,7 +250,6 @@ int main(int argc, char** argv) {
     oniumTree->Branch("multV0CNeg",         &multV0CNeg);
     oniumTree->Branch("nMPI",               &nMPI);
     oniumTree->Branch("type",               &type);                                                                 
-    oniumTree->Branch("chEta",              &chEta);                                                              
     oniumTree->Branch("onium.pdg",          &onium.pdg);
     oniumTree->Branch("onium.decayChannel", &onium.decayChannel);
     oniumTree->Branch("onium.pt",           &onium.pt);
@@ -309,9 +328,16 @@ int main(int argc, char** argv) {
         vector <Quarkonium> foundQuarkoniumPerEvent;
         // here the loop over the particles starts
         for(int iPart=0; iPart<pythia.event.size(); iPart++) {
+
             Particle* part = &pythia.event[iPart];
             if(isPrimaryChargedALICE(iPart, pythia)) {
-	        chEta = part->eta();
+
+                TClonesArray& chTracks = *(testEvent->tracks);
+                Track* chTrack = NULL;
+                chTrack = new(chTracks[testEvent->multFull]) Track();
+                chTrack->eta = part->eta();
+                testEvent->multFull += 1;
+
                 ++multFull;
                 if(abs(part->eta())<0.9)                 ++multEta09;
                 if(abs(part->eta())<1.0)                 ++multEta1;
@@ -349,6 +375,7 @@ int main(int argc, char** argv) {
                     foundQuarkoniumPerEvent.push_back(found);
                 }
             }
+
         }  // end of particle loop
 
         eventTree->Fill();
