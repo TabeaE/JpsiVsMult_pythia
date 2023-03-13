@@ -287,7 +287,6 @@ int main(int argc, char** argv) {
     int seed = time(NULL) * taskid % 900000000;
     std::stringstream sstm;
     sstm << "Random:seed =" << seed;
-    std::string seedString = sstm.str();
     pythia.readString(seedString);
 
     pythia.init();
