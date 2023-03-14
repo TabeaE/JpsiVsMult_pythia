@@ -118,24 +118,6 @@ struct Quarkonium {
     {};
 };
 
-struct Track {
-    double eta;
-    Track():
-        eta(0.)
-    {};
-};
-
-struct ChEvent {
-    unsigned short multFull;
-    TClonesArray* tracks;
-    ChEvent():
-        multFull(0),
-        tracks(0x0)
-    {
-      tracks = new TClonesArray("Track", 100000);
-    };
-};
-
 
 void traceBackQuarkonium(Quarkonium &found, unsigned short particle, Pythia &pythia);
 bool isOnium(int pdg);
@@ -168,6 +150,7 @@ bool inV0ANegAcceptance(float eta);
 bool inV0CPosAcceptance(float eta);
 bool inV0CNegAcceptance(float eta);
 
+
 /**
  *
  * The main function.
@@ -199,6 +182,7 @@ int main(int argc, char** argv) {
     // prepare trees
     unsigned short multFull, multEta09, multEta1, multV0APos, multV0ANeg, multV0CPos, multV0CNeg, nMPI;
     unsigned char  type;
+    double chEta;
     unsigned short multRegionRnd;
     unsigned short multEta09RegionRnd;
     unsigned short multEta1RegionRnd;
@@ -210,6 +194,7 @@ int main(int argc, char** argv) {
     unsigned short nPartTarg;
     unsigned short nAbsTarg;
     unsigned short nDiffTarg;
+    int eventNo;
 
     // define the tree for minimum bias events
     TTree* eventTree = new TTree("eventTree", "event information");
@@ -234,9 +219,10 @@ int main(int argc, char** argv) {
     eventTree->Branch("nAbsTarg",            &nAbsTarg);   // nof absorptively wounded target nucleons
     eventTree->Branch("nDiffTarg",           &nDiffTarg);  // nof diffrectively wounded target nucleons
 
-    TTree* eventTestTree = new TTree("eventTestTree", "test event information");
-    ChEvent* testEvent = new ChEvent();
-    eventTestTree->Branch("testEvent", &testEvent, 16000, 99);
+    TTree* particlesTree = new TTree("particlesTree", "charged particle information");
+    particlesTree->Branch("eta",    &chEta);
+    particlesTree->Branch("weight", &weight);
+    eventTree->AddFriend("particlesTree");
 
     TTree* oniumTree = new TTree("oniumTree", "Onia information");
     Quarkonium onium;
@@ -248,7 +234,8 @@ int main(int argc, char** argv) {
     oniumTree->Branch("multV0CPos",         &multV0CPos);
     oniumTree->Branch("multV0CNeg",         &multV0CNeg);
     oniumTree->Branch("nMPI",               &nMPI);
-    oniumTree->Branch("type",               &type);                                                                 
+    oniumTree->Branch("type",               &type);                                                
+    oniumTree->Branch("weight",             &weight);
     oniumTree->Branch("onium.pdg",          &onium.pdg);
     oniumTree->Branch("onium.decayChannel", &onium.decayChannel);
     oniumTree->Branch("onium.pt",           &onium.pt);
@@ -274,7 +261,7 @@ int main(int argc, char** argv) {
     oniumTree->Branch("multV0CPosRegion3",  &onium.multV0CPosRegion3);
     oniumTree->Branch("multV0CNegRegion1",  &onium.multV0CNegRegion1);
     oniumTree->Branch("multV0CNegRegion2",  &onium.multV0CNegRegion2);
-    oniumTree->Branch("multV0CNegRegion3",  &onium.multV0CNegRegion3);
+    oniumTree->Branch("multV0CNegRegion3",  &onium.multV0CNegRegion3); 
 
 
     // start pythia
@@ -290,7 +277,6 @@ int main(int argc, char** argv) {
     pythia.readString(seedString);
 
     pythia.init();
-
 
     // Start the event loop
     for(int iev=0; iev<nev; iev++) {
@@ -323,20 +309,14 @@ int main(int argc, char** argv) {
         nPartTarg = pythia.info.hiInfo->nPartTarg();
         nAbsTarg  = pythia.info.hiInfo->nAbsTarg();
         nDiffTarg = pythia.info.hiInfo->nDiffTarg();
-
+                
         vector <Quarkonium> foundQuarkoniumPerEvent;
         // here the loop over the particles starts
         for(int iPart=0; iPart<pythia.event.size(); iPart++) {
 
             Particle* part = &pythia.event[iPart];
             if(isPrimaryChargedALICE(iPart, pythia)) {
-
-                TClonesArray& chTracks = *(testEvent->tracks);
-                Track* chTrack = NULL;
-                chTrack = new(chTracks[testEvent->multFull]) Track();
-                chTrack->eta = part->eta();
-                testEvent->multFull += 1;
-
+	      	chEta = part->eta();
                 ++multFull;
                 if(abs(part->eta())<0.9)                 ++multEta09;
                 if(abs(part->eta())<1.0)                 ++multEta1;
@@ -374,7 +354,7 @@ int main(int argc, char** argv) {
                     foundQuarkoniumPerEvent.push_back(found);
                 }
             }
-
+	    particlesTree->Fill();
         }  // end of particle loop
 
         eventTree->Fill();
@@ -393,6 +373,7 @@ int main(int argc, char** argv) {
     pythia.stat();
     
     eventTree->Write();
+    particlesTree->Write();
     oniumTree->Write();
     fout->Close();
 
